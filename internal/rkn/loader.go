@@ -2,6 +2,7 @@ package rkn
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/base64"
 	"github.com/Mortimor1/socres/internal/wsdl"
 	log "github.com/sirupsen/logrus"
@@ -16,6 +17,8 @@ func RknLoad(request string, signed string, output string) {
 		Password: "",
 	}
 
+	lastUpdate := read()
+
 	operator := wsdl.NewOperatorRequestPortType("http://vigruzki.rkn.gov.ru/services/OperatorRequest/?wsdl", true, &basicAuth)
 	response := getDumpDateEx(operator)
 
@@ -24,6 +27,13 @@ func RknLoad(request string, signed string, output string) {
 
 	tm := time.Unix(lastDate/1000, 0)
 	log.Infof("Dump last time: %s", tm)
+
+	if lastUpdate == tm.String() {
+		log.Info("Данные в реестре не изменились.")
+		return
+	}
+	write(tm.String())
+
 	log.Infof("Dump format: %s", dumpFormat)
 
 	code := sendRequest(operator, request, signed, dumpFormat)
@@ -39,7 +49,7 @@ func RknLoad(request string, signed string, output string) {
 		}
 	}
 
-	if result != true{
+	if result != true {
 		log.Fatal("ОШИБКА: Не удалось получть выгрузку")
 	}
 
@@ -48,7 +58,36 @@ func RknLoad(request string, signed string, output string) {
 	log.Info("УСПЕХ: Выгрузка завершена")
 }
 
-func getDumpDateEx(operator *wsdl.OperatorRequestPortType) *wsdl.GetLastDumpDateExResponse{
+func read() string {
+	filerc, err := os.Open("lastDate.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer filerc.Close()
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(filerc)
+	contents := buf.String()
+	return contents
+}
+
+func write(lastDate string) {
+	f, err := os.Create("lastDate.txt")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer f.Close()
+
+	_, err2 := f.WriteString(lastDate)
+
+	if err2 != nil {
+		log.Fatal(err2)
+	}
+}
+
+func getDumpDateEx(operator *wsdl.OperatorRequestPortType) *wsdl.GetLastDumpDateExResponse {
 	dump := wsdl.GetLastDumpDateEx{}
 	response, err := operator.GetLastDumpDateEx(&dump)
 
@@ -90,7 +129,7 @@ func sendRequest(operator *wsdl.OperatorRequestPortType, requestPath string, sig
 
 func getResult(operator *wsdl.OperatorRequestPortType, code string) bool {
 	request := wsdl.GetResult{
-		Code:    code,
+		Code: code,
 	}
 
 	response, err := operator.GetResult(&request)
@@ -103,7 +142,7 @@ func getResult(operator *wsdl.OperatorRequestPortType, code string) bool {
 
 func getResultSocResources(operator *wsdl.OperatorRequestPortType, code string) []byte {
 	request := wsdl.GetResultSocResources{
-		Code:    code,
+		Code: code,
 	}
 
 	response, err := operator.GetResultSocResources(&request)
@@ -127,7 +166,7 @@ func encodeBase64(path string) *[]byte {
 	return &array
 }
 
-func decodeBase64(array []byte, path string)  {
+func decodeBase64(array []byte, path string) {
 	dec, err := base64.StdEncoding.DecodeString(string(array))
 	if err != nil {
 		panic(err)

@@ -1,7 +1,6 @@
 package socres
 
 import (
-	"flag"
 	"gopkg.in/routeros.v2"
 	"gopkg.in/routeros.v2/proto"
 	"log"
@@ -17,8 +16,6 @@ type Client struct {
 }
 
 func (client *Client) SendMikrotik(command string) []*proto.Sentence {
-	flag.Parse()
-
 	c, err := client.dial()
 	if err != nil {
 		log.Fatal(err)
@@ -37,7 +34,7 @@ func (client *Client) SendMikrotik(command string) []*proto.Sentence {
 	return r.Re
 }
 
-func (client *Client)dial() (*routeros.Client, error) {
+func (client *Client) dial() (*routeros.Client, error) {
 	if client.UseTLS {
 		return routeros.DialTLS(client.Address, client.Username, client.Password, nil)
 	}

@@ -31,6 +31,5 @@ func ParseXML(filePath string) rkn.RegisterSocResources {
 	// we iterate through every user within our users array and
 	// print out the user Type, their name, and their facebook url
 	// as just an example
-	log.Info(register)
 	return register
 }
