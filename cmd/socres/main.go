@@ -20,6 +20,7 @@ var noLoad = false
 var host = ""
 var username = ""
 var password = ""
+var xml = ""
 
 func main() {
 	Formatter := new(log.TextFormatter)
@@ -34,7 +35,7 @@ func main() {
 		utils.Unzip("registry.zip", "output")
 	}
 
-	register := socres.ParseXML("output/register.xml")
+	register := socres.ParseXML(xml)
 
 	mikrot := socres.Client{
 		Address:  host,
@@ -67,6 +68,9 @@ func parseArgs() {
 		}
 		if os.Args[i] == "--password" {
 			password = os.Args[i+1]
+		}
+		if os.Args[i] == "--xml" {
+			xml = os.Args[i+1]
 		}
 		if os.Args[i] == "--help" {
 			fmt.Println()

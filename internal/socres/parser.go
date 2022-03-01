@@ -9,10 +9,11 @@ import (
 )
 
 func ParseXML(filePath string) rkn.RegisterSocResources {
+	log.Info("Dump file path: ", filePath)
 	xmlFile, err := os.Open(filePath)
 	// if we os.Open returns an error then handle it
 	if err != nil {
-		log.Info(err)
+		log.Fatal(err)
 	}
 
 	log.Info("Successfully Opened register.xml")
